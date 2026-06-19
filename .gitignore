@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+debug_*.py
+diag*.py
+diag_*.png
+probe_child.py
+test_send.py
+list_win.py
+smoke.ps1
