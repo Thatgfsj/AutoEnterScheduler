@@ -7,6 +7,6 @@ debug_*.py
 diag*.py
 diag_*.png
 probe_child.py
-test_send.py
+test_*.py
 list_win.py
 smoke.ps1
