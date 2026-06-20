@@ -174,11 +174,12 @@ def _force_foreground(hwnd):
     """
     强制把 hwnd 切到前台。SetForegroundWindow 受系统前台锁限制，
     这里综合用 AttachThreadInput + Alt键解锁 这个经典组合拳。
-    返回之前的前台窗口句柄(供恢复用)。
+    返回 (之前的前台窗口句柄, 保持 attach 的线程列表)。
+    调用方必须在用完后调用 _detach_threads(attached) 解除 attach。
     """
     prev_fg = user32.GetForegroundWindow()
     if prev_fg == hwnd:
-        return prev_fg
+        return prev_fg, []
 
     cur_tid = kernel32.GetCurrentThreadId()
     target_tid = user32.GetWindowThreadProcessId(hwnd, None)
@@ -192,6 +193,7 @@ def _force_foreground(hwnd):
     user32.keybd_event(0x12, 0, 0x0002, 0)     # VK_MENU up
 
     # 技巧2：AttachThreadInput 把当前线程与目标/前台线程的输入队列挂钩
+    # 保持 attach，调用方发送完键盘事件后再 detach
     attached = []
     for tid in {target_tid,
                 user32.GetWindowThreadProcessId(prev_fg, None) if prev_fg else 0}:
@@ -203,42 +205,48 @@ def _force_foreground(hwnd):
     user32.BringWindowToTop(hwnd)
     user32.SetFocus(hwnd)
 
-    for tid in attached:
-        user32.AttachThreadInput(tid, cur_tid, False)
-
     # 等待焦点真正切换
     for _ in range(20):
         if user32.GetForegroundWindow() == hwnd:
             break
         time.sleep(0.025)
     time.sleep(0.1)
-    return prev_fg
+    return prev_fg, attached
+
+
+def _detach_threads(attached):
+    """解除 AttachThreadInput 挂钩。"""
+    cur_tid = kernel32.GetCurrentThreadId()
+    for tid in attached:
+        user32.AttachThreadInput(tid, cur_tid, False)
 
 
 def send_enter_sendinput(hwnd, count=1, interval=0.2, restore=True):
     """
-    前台 SendInput 模式：
-    切前台 → 发真实键盘事件 → (可选)恢复原前台。
+    前台 keybd_event 模式：
+    切前台 → 保持 AttachThreadInput → 发真实键盘事件 → detach → 恢复原前台。
     这是 Windows Terminal / Claude / 浏览器 / Electron 唯一可靠方式。
-    先尝试 SendInput，失败则用 keybd_event 兜底。
     """
-    prev_fg = _force_foreground(hwnd)
-    used = "SendInput"
+    prev_fg, attached = _force_foreground(hwnd)
     try:
         if user32.GetForegroundWindow() != hwnd:
-            raise OSError(f"无法将窗口切到前台(当前前台={user32.GetForegroundWindow()})，SendInput 无目标")
+            raise OSError(f"无法将窗口切到前台(当前前台={user32.GetForegroundWindow()})")
 
+        used = "keybd_event"
         for i in range(count):
-            # keybd_event 已实测对 Windows Terminal/Claude TUI 可靠，作为主路径
+            # AttachThreadInput 保持期间，keybd_event 可以正确注入到前台窗口
             user32.keybd_event(VK_RETURN, 0, 0, 0)
             user32.keybd_event(VK_RETURN, 0, 0x0002, 0)
-            used = "keybd_event"
             if count > 1 and i < count - 1:
                 time.sleep(interval)
     finally:
+        # 先 detach 发送期间的 attach
+        _detach_threads(attached)
+        # 恢复原前台
         if restore and prev_fg and user32.IsWindow(prev_fg):
             time.sleep(0.1)
-            _force_foreground(prev_fg)
+            _, restore_attached = _force_foreground(prev_fg)
+            _detach_threads(restore_attached)
     return used
 
 
