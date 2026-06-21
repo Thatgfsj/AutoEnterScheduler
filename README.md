@@ -4,7 +4,7 @@
 
 ## 这是什么
 
-一个 Windows 桌面小工具，用来**定时向指定窗口发送回车键（Enter）**。
+一个桌面小工具，用来**定时向指定窗口发送回车键（Enter）**。支持 Windows 和 Linux。
 
 **我的使用场景**：AI 的额度每 5 个小时刷新一次。我希望在凌晨 5 点我睡觉的时候，工具自动帮我在终端里按回车，让 AI 继续跑起来，不用半夜爬起来手动操作。
 
@@ -47,7 +47,28 @@
 
 ## 下载
 
+### Windows
 去 [Releases](https://github.com/Thatgfsj/AutoEnterScheduler/releases) 下载最新的 `.exe`，单文件免安装，双击即可运行。
+
+### Linux
+下载 AppImage 文件，添加执行权限后直接运行：
+
+```bash
+chmod +x AutoEnterScheduler-*.AppImage
+./AutoEnterScheduler-*.AppImage
+```
+
+**依赖**：需要安装 `xdotool`：
+```bash
+# Debian/Ubuntu
+sudo apt install xdotool
+
+# Arch Linux
+sudo pacman -S xdotool
+
+# Fedora
+sudo dnf install xdotool
+```
 
 ## 使用方法
 
@@ -59,13 +80,22 @@
 
 ## 技术栈
 
+### Windows 版
 - **语言**: Python 3.11
 - **GUI**: tkinter (ttk)
 - **发键**: ctypes + Win32 API (`keybd_event` / `PostMessageW` / `AttachThreadInput`)
 - **图标**: Pillow 程序化生成
 - **打包**: PyInstaller (--onefile --windowed)
 
+### Linux 版
+- **语言**: Python 3.11
+- **GUI**: tkinter (ttk)
+- **发键**: xdotool (X11 窗口自动化工具)
+- **打包**: PyInstaller + AppImage
+
 ## 开发
+
+### Windows
 
 ```bash
 # 安装依赖
@@ -76,6 +106,21 @@ python make_icon.py
 
 # 打包
 pyinstaller --noconfirm --onefile --windowed --name AutoEnterScheduler --icon icon.ico --add-data "icon.ico;." auto_enter.py
+```
+
+### Linux
+
+```bash
+# 安装依赖
+sudo apt install python3-tk xdotool
+pip install PyInstaller
+
+# 直接运行
+python3 auto_enter_linux.py
+
+# 打包成 AppImage
+chmod +x build_appimage.sh
+./build_appimage.sh
 ```
 
 ## 许可
