@@ -393,7 +393,7 @@ class SchedulerThread(threading.Thread):
                     self._log("已停止(发送期间)。")
                     return
                 try:
-                    used = send_enter(hwnd, 1, self.mode, self.restore)
+                    used = send_enter(hwnd, 1, mode=self.mode, restore=self.restore)
                     self._log(f"    第 {i+1}/{self.repeat_count} 次 ✓ ({used})")
                 except Exception as e:
                     self._log(f"    第 {i+1}/{self.repeat_count} 次 ✗ {e}")
