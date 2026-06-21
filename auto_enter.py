@@ -481,6 +481,9 @@ class App:
         self.win_list.pack(side="left", fill="both", expand=True); sb.pack(side="right", fill="y")
         self.win_list.bind("<<ListboxSelect>>", self.on_select_window)
         self.win_list.bind("<Control-a>", lambda e: (self.select_all(), "break")[1])
+        self._listbox_has_focus = False
+        self.win_list.bind("<FocusIn>", lambda e: setattr(self, '_listbox_has_focus', True))
+        self.win_list.bind("<FocusOut>", lambda e: setattr(self, '_listbox_has_focus', False))
         self._windows = []
 
         sel_frm = ttk.Frame(frm_win); sel_frm.pack(fill="x", padx=8, pady=(0, 8))
@@ -650,6 +653,9 @@ class App:
 
     def _update_selection(self):
         sel_indices = self.win_list.curselection()
+        # 如果 Listbox 没有焦点（比如用户点击了其他输入框），保留之前的选择
+        if not sel_indices and not self._listbox_has_focus:
+            return
         self._selected = []
         if not sel_indices:
             self.selected_var.set("0 个")
