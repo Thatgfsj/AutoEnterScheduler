@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AutoEnterScheduler - 定时回车工具 v1.1.0
+AutoEnterScheduler - 定时回车工具 v1.1.1
 
 功能：
     1. 枚举系统中所有可见顶层窗口，支持多选（Ctrl/Shift）。
@@ -36,7 +36,7 @@ from tkinter import ttk, messagebox
 # --------------------------- 常量 ---------------------------
 CONFIG_FILE = "config.json"
 LOG_FILE = "log.txt"
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 
 # --------------------------- Win32 声明 ---------------------------
 user32 = ctypes.windll.user32
