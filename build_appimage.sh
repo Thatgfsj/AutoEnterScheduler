@@ -5,7 +5,7 @@
 set -e
 
 APP_NAME="AutoEnterScheduler"
-APP_VERSION="1.1.1"
+APP_VERSION="1.2.0"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR="$SCRIPT_DIR/appimage-build"
 APPDIR="$BUILD_DIR/$APP_NAME.AppDir"
