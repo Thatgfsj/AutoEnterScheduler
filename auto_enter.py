@@ -746,7 +746,7 @@ class App:
         for hwnd, title in self._selected:
             t = title if len(title) <= 25 else title[:23] + "…"
             try:
-                used = send_enter(hwnd, 1, mode, restore=self.restore_var.get())
+                used = send_enter(hwnd, 1, mode=mode, restore=self.restore_var.get())
                 self._push_log(f"  ✓ [{hwnd}] {t} ({used})")
                 ok_count += 1
             except Exception as e:
